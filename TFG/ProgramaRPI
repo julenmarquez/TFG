@@ -1,0 +1,66 @@
+import paho.mqtt.publish as publish
+import json
+import datetime
+import time
+import paho.mqtt.client as mqtt
+
+# Define el nombre y el puerto del broker MQTT
+BROKER_HOST = "192.168.86.230"
+BROKER_PORT = 1883
+
+dato1 = 0
+dato2 = 0
+
+while True:
+    try:
+        # Crea un objeto cliente MQTT
+        client = mqtt.Client()
+
+        # Configura la función que se ejecutará cuando se reciba un mensaje MQTT en el primer topic
+        def on_message(client, userdata, message):
+            global dato1
+            global dato2
+            print(f"Mensaje recibido en el topic {message.topic}: {message.payload.decode()}")
+            if message.topic == 'L2_R1':
+                dato1 = message.payload.decode()
+            elif message.topic == 'L2_R2':
+                dato2 = message.payload.decode()
+
+        client.on_message = on_message
+
+        # Conéctate al broker MQTT
+        client.connect(BROKER_HOST, BROKER_PORT)
+
+        # Suscríbete a los topics 'L2_R1' y 'L2_R2'
+        client.subscribe("L2_R1")
+        client.subscribe("L2_R2")
+
+        # Inicia un bucle que mantendrá la conexión MQTT activa y procesará los mensajes entrantes
+        client.loop_start()
+
+        while True:
+            current_time = datetime.datetime.now()
+
+            # Publica mensaje en el primer topic
+            payload1 = {
+                "value": dato1,  # Convierte dato1 a un valor entero
+                "timestamp": current_time.isoformat()  # Agregamos la fecha y hora actual al mensaje
+            }
+
+            mensaje_pub1 = json.dumps(payload1)  # Este es el mensaje a publicar
+            publish.single(topic='L2_R1', payload=mensaje_pub1, qos=0, hostname="192.168.2.152", keepalive=200)
+
+            # Publica mensaje en el segundo topic
+            payload2 = {
+                "value": dato2,
+                "timestamp": current_time.isoformat()  # Agregamos la fecha y hora actual al mensaje
+            }
+
+            mensaje_pub2 = json.dumps(payload2)  # Este es el mensaje a publicar
+            publish.single(topic='L2_R2', payload=mensaje_pub2, qos=0, hostname="192.168.2.152", keepalive=200)
+
+            time.sleep(0.2)  # Esperamos 0.2 segundos antes de enviar el siguiente mensaje
+
+    except Exception as e:
+        print(f"Error: {e}. Intentando reconectar en 5 segundos...")
+        time.sleep(5)

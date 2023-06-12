@@ -1,0 +1,150 @@
+<html lang="en">
+
+<head>
+
+  <title>TFG</title>
+  <!-- Google Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+    rel="stylesheet">
+  <script src="/static/js/socket.io.js"></script>
+  <!-- Vendor CSS Files -->
+  <link href="../static/vendor/aos/aos.css" rel="stylesheet">
+  <link href="../static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../static/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="../static/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="../static/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="../static/vendor/remixicon/remixicon.css" rel="stylesheet">
+  <link href="../static/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+  <!-- Template Main CSS File -->
+  <link href="../static/css/ESTILO.CSS" rel="stylesheet">
+
+</head>
+
+<body>
+  <div id="hero">
+    <div class="background-overlay"></div>
+    <div class="content">
+      <div class="container">
+        <div>
+          <div>
+            <h1>Estado del sistema de vacío</h1>
+          </div>
+        </div>
+        <div class="row gy-4 mt-5 justify-content-center aos-init aos-animate" style="color: white; background-color: rgba(0, 0, 0, 0.8);">
+          <div class="col-xl-2 col-md-4" id="sensor1">
+            <h2>Robot 1</h2>
+            <div class="icon-box">
+              <span id="hora1"></span>
+              <div id="recuadro1">
+                <span id="datos1"></span>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-2 col-md-4" id="sensor2">
+            <h2>Robot 2</h2>
+            <div class="icon-box">
+              <span id="hora2"></span>
+              <div id="recuadro2">
+                <span id="datos2"></span>
+              </div>
+            </div>
+          </div>
+          <div style="text-align: center;">
+            Proxima predicción en:
+            <div id="secs"></div>
+          </div>
+        </div>
+        <div style="display: flex; color: white;">
+          <div style="display: flex; flex-direction: column; margin: 1rem;">
+            Predicción Robot 1
+            <div id="grafico"></div>
+          </div>
+          <div style="display: flex; flex-direction: column; margin: 1rem;">
+            Predicción Robot 2
+            <div id="grafico2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+
+  <!-- Inicio la conexión con SocketIO -->
+  <script>
+
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+    // Se ejecuta cuando se reciben nuevos datos en el topic.
+    socket.on('L2_R1', function (datos) {
+      // Arreglo del formato de la hora recibida, para mostrarla en la web
+      var horaOriginal = datos.hora;
+      var horaFormateada = horaOriginal.slice(11, 19);
+      horaFormateada = horaFormateada.replace('T', ':');
+
+      document.getElementById('hora1').innerHTML = horaFormateada;
+      document.getElementById('datos1').innerHTML = datos.valor
+      
+      //apartado de cambio de color en función del vacío correcto
+      var recuadro = document.getElementById('recuadro1');
+      if (datos.valor < 270) {
+        recuadro.style.backgroundColor = 'green';
+      } else if (datos.valor >= 270) {
+        recuadro.style.backgroundColor = 'red';
+      }
+
+    });
+
+    //mismo proceso para cada topic (robot)
+    socket.on('L2_R2', function (datos) {
+      var horaOriginal = datos.hora;
+      var horaFormateada = horaOriginal.slice(11, 19);
+      horaFormateada = horaFormateada.replace('T', ':');
+      document.getElementById('hora2').innerHTML = horaFormateada;
+      document.getElementById('datos2').innerHTML = datos.valor
+
+      var recuadro = document.getElementById('recuadro2');
+      if (datos.valor < 270) {
+        recuadro.style.backgroundColor = 'green';
+      } else if (datos.valor >= 270) {
+        recuadro.style.backgroundColor = 'red';
+      }
+
+    });
+
+
+    // Código JavaScript para recibir y mostrar la imagen del gráfico
+    socket.on('grafico', function (data) {
+      var imagenURL = 'data:image/png;base64,' + data;
+      var imgElement = document.createElement('img');
+      imgElement.src = imagenURL;
+
+      var divGrafico = document.getElementById('grafico');
+
+      divGrafico.innerHTML = '';
+      divGrafico.appendChild(imgElement);
+    });
+
+    // mismo proceso para cada robot
+    socket.on('grafico2', function (data) {
+      var imagenURL = 'data:image/png;base64,' + data;
+      var imgElement = document.createElement('img');
+      imgElement.src = imagenURL;
+      var divGrafico = document.getElementById('grafico2');
+
+      divGrafico.innerHTML = '';
+      divGrafico.appendChild(imgElement);
+    });
+
+    // socketio que gestiona el tiempo restante para la próxima predicción
+    socket.on('segundos', function (data) {
+      var secs = data.sec;
+      document.getElementById('secs').innerHTML = ' ' + secs;
+    });
+
+  </script>
+</body>
+</html>
