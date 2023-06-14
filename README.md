@@ -1,4 +1,4 @@
-A continuación, se adjunta el programa completo del código mediante un repositorio de GitHub. En la carpeta adjunta se encuentran los siguientes archivos:
+En este repositorio se encuentra programa completo del prototipo de un sistema IoT de monitorización y predicción del sistema de vacío de los robots de una línea de producción. Se adjunta el programa completo de la herramienta en la carpeta TFG. Se encuentran los siguientes archivos:
 
 •	Programa de los módulos ESP8266 (ProgramaR1_ESP8266)
 •	Programa de la Raspberry Pi (ProgramaR2_ESP8266)
